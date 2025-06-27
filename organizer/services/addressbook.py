@@ -32,7 +32,8 @@ class AddressBook:
                 contact.company,
                 contact.phone,
                 contact.address,
-                contact.email
+                contact.email,
+                contact.birthday.strftime("%d-%m-%Y") if contact.birthday else ""
             ]
             combined = " ".join(field or "" for field in fields)
             if query_lower in combined.lower():
