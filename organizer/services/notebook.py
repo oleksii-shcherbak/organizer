@@ -27,7 +27,7 @@ class Notebook:
         results = []
         query_lower = query.lower()
         for note in self._notes:
-            combined = f"{note.title} {note.content or ''} {' '.join(note.tags)}"
+            combined = f"{note.title} {note.text or ''} {' '.join(note.tags)}"
             if query_lower in combined.lower():
                 results.append(note)
         return results
