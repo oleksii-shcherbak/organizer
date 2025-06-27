@@ -25,14 +25,15 @@ class AddressBook:
         results = []
         query_lower = query.lower()
         for contact in self._contacts.values():
-            combined = " ".join([
-                contact.name or "",
-                contact.last_name or "",
-                contact.company or "",
-                contact.phone or "",
-                contact.address or "",
-                contact.email or ""
-            ])
+            fields = [
+                contact.name,
+                contact.last_name,
+                contact.company,
+                contact.phone,
+                contact.address,
+                contact.email
+            ]
+            combined = " ".join(field or "" for field in fields)
             if query_lower in combined.lower():
                 results.append(contact)
         return results
