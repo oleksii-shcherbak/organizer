@@ -1,4 +1,5 @@
 from typing import Optional, List
+from datetime import date
 from organizer.models.contact import Contact
 
 
@@ -40,3 +41,25 @@ class AddressBook:
 
     def all(self) -> List[Contact]:
         return list(self._contacts.values())
+
+    def sort(self, by: str = "name") -> List[Contact]:
+        if by == "name":
+            return sorted(self._contacts.values(), key=lambda c: c.full_name().lower())
+        elif by == "updated":
+            return sorted(self._contacts.values(), key=lambda c: c.last_modified, reverse=True)
+        else:
+            raise ValueError("Unsupported sort key. Use 'name' or 'updated'.")
+
+    def get_upcoming_birthdays(self, days: int = 7) -> List[Contact]:
+        today = date.today()
+        upcoming = []
+        for contact in self._contacts.values():
+            if contact.birthday:
+                try:
+                    bday_this_year = contact.birthday.replace(year=today.year)
+                except ValueError:
+                    continue  # skip invalid dates like Feb 29 on non-leap years
+                delta = (bday_this_year - today).days
+                if 0 <= delta <= days:
+                    upcoming.append(contact)
+        return upcoming
