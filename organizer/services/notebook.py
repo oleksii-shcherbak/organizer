@@ -34,3 +34,11 @@ class Notebook:
 
     def all(self) -> List[Note]:
         return self._notes
+
+    def sorted(self, by: str = "title") -> List[Note]:
+        if by == "title":
+            return sorted(self._notes, key=lambda n: n.title.lower())
+        elif by == "last_modified":
+            return sorted(self._notes, key=lambda n: n.last_modified, reverse=True)
+        else:
+            raise ValueError("Unsupported sort key. Use 'title' or 'last_modified'.")
