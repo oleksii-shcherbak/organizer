@@ -147,13 +147,16 @@ def test_addressbook_add_contact_with_none_name_raises():
         ab.add(Contact(name=None))
 
 
-def test_addressbook_edit_name_to_existing_name_fails():
+def test_addressbook_edit_name_to_existing_name_allowed():
     ab = AddressBook()
     ab.add(Contact(name="Alice"))
     ab.add(Contact(name="Bob"))
-    # Attempt renaming "Bob" to "Alice"
+
     result = ab.edit("Bob", {"name": "alice"})
-    assert result is False
+
+    assert result is True
+    all_contacts = ab.search("alice")
+    assert len(all_contacts) == 2  # Now two contacts named Alice
 
 
 def test_addressbook_edit_with_empty_dict_does_nothing():
@@ -170,3 +173,21 @@ def test_addressbook_edit_name_preserves_case_conflict():
     ab.add(Contact(name="Daniel"))
     result = ab.edit("Daniel", {"name": "daniel"})  # only case difference
     assert result is True
+
+
+def test_edit_remove_fields():
+    ab = AddressBook()
+    contact = Contact(
+        name="Liam",
+        phone="+123456789",
+        email="liam@example.com",
+        address="Old address"
+    )
+    ab.add(contact)
+
+    ab.edit("Liam", {"phone": None, "email": None, "address": None})
+    updated = ab.get("Liam")[0]
+
+    assert updated.phone is None
+    assert updated.email is None
+    assert updated.address is None

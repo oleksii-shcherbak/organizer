@@ -30,32 +30,21 @@ class AddressBook:
         key = normalize_text(name)
         for contact in self._contacts:
             if normalize_text(contact.name) == key:
-                new_name = updated_data.get("name")
-                if new_name:
-                    new_normalized = normalize_text(new_name)
-                    if new_normalized != key:
-                        if any(normalize_text(c.name) == new_normalized for c in self._contacts):
-                            return False
-                    contact.name = capitalize_name(new_name)
-
-                if "last_name" in updated_data:
-                    contact.last_name = capitalize_name(updated_data["last_name"])
-
-                if "company" in updated_data:
-                    contact.company = updated_data["company"]
-
-                if "phone" in updated_data:
-                    contact.phone = validate_phone(updated_data["phone"])
-
-                if "address" in updated_data:
-                    contact.address = updated_data["address"]
-
-                if "email" in updated_data:
-                    contact.email = validate_email(updated_data["email"])
-
-                if "birthday" in updated_data:
-                    contact.birthday = updated_data["birthday"]
-
+                for field, value in updated_data.items():
+                    if field == "name" and value:
+                        contact.name = capitalize_name(value)
+                    elif field == "last_name":
+                        contact.last_name = capitalize_name(value) if value else None
+                    elif field == "company":
+                        contact.company = value
+                    elif field == "phone":
+                        contact.phone = validate_phone(value) if value else None
+                    elif field == "address":
+                        contact.address = value
+                    elif field == "email":
+                        contact.email = validate_email(value) if value else None
+                    elif field == "birthday":
+                        contact.birthday = value
                 contact.update_modified_time()
                 return True
         return False
