@@ -1,3 +1,13 @@
+"""Tests for the Contact class.
+
+This module verifies the behavior of the Contact data model, including:
+
+- Initialization and normalization of fields
+- Validation of email and phone number formats
+- Capitalization of names
+- Updating the last_modified timestamp
+"""
+
 import pytest
 from organizer.models.contact import Contact
 

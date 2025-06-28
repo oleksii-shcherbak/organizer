@@ -1,3 +1,15 @@
+"""Tests for the AddressBook class.
+
+This module contains unit tests for the AddressBook class, covering:
+
+- Adding contacts, including duplicates
+- Editing individual and multiple fields
+- Handling invalid input (e.g., empty names, invalid email/phone)
+- Searching and deleting contacts
+- Modifying name cases and testing preservation of contact list integrity
+- Ensuring contact metadata (e.g., last_modified) updates properly
+"""
+
 import pytest
 from datetime import date
 from organizer.models.contact import Contact

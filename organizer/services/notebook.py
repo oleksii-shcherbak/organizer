@@ -3,21 +3,48 @@ from organizer.models.note import Note
 
 
 class Notebook:
+    """Manages a collection of Note objects with operations like add, edit, delete, search, and sort."""
+
     def __init__(self) -> None:
+        """Initializes an empty Notebook."""
         self._notes: List[Note] = []
 
     def add(self, note: Note) -> None:
+        """Adds a note to the notebook.
+
+        Args:
+            note (Note): The note to add.
+
+        Raises:
+            AttributeError: If the note is None.
+        """
         if note is None:
             raise AttributeError("Cannot add None as a note.")
         self._notes.append(note)
 
     def get(self, title: str) -> Optional[Note]:
+        """Retrieves a note by its title.
+
+        Args:
+            title (str): The title of the note to retrieve.
+
+        Returns:
+            Optional[Note]: The found note, or None if not found.
+        """
         for note in self._notes:
             if note.title == title:
                 return note
         return None
 
     def delete(self, title: str) -> bool:
+        """Deletes the first note found with the given title.
+
+        Args:
+            title (str): The title of the note to delete.
+
+        Returns:
+            bool: True if a note was deleted, False otherwise.
+        """
         for i, note in enumerate(self._notes):
             if note.title == title:
                 del self._notes[i]
@@ -25,6 +52,15 @@ class Notebook:
         return False
 
     def edit(self, title: str, updated: Note) -> bool:
+        """Replaces the note with the given title using a new note.
+
+        Args:
+            title (str): The title of the note to replace.
+            updated (Note): The new note object.
+
+        Returns:
+            bool: True if the note was replaced, False if not found or updated is None.
+        """
         if updated is None:
             return False
         for i, note in enumerate(self._notes):
@@ -34,6 +70,14 @@ class Notebook:
         return False
 
     def search(self, query: str) -> List[Note]:
+        """Searches for notes that contain the query in the title, text, or tags.
+
+        Args:
+            query (str): The query string to search for.
+
+        Returns:
+            List[Note]: A list of matching notes.
+        """
         results = []
         query_lower = query.lower()
         for note in self._notes:
@@ -43,9 +87,25 @@ class Notebook:
         return results
 
     def all(self) -> List[Note]:
+        """Returns all notes in the notebook.
+
+        Returns:
+            List[Note]: A list of all notes.
+        """
         return self._notes
 
     def sorted(self, by: str = "title") -> List[Note]:
+        """Sorts the notes by a given attribute.
+
+        Args:
+            by (str): The attribute to sort by. Options are "title" or "last_modified".
+
+        Returns:
+            List[Note]: A sorted list of notes.
+
+        Raises:
+            ValueError: If the sort key is unsupported.
+        """
         if by == "title":
             return sorted(self._notes, key=lambda n: n.title.lower())
         elif by == "last_modified":

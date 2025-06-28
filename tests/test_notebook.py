@@ -1,3 +1,15 @@
+"""Tests for the Notebook service and Note model.
+
+This module includes a comprehensive test suite covering:
+
+- Adding, retrieving, editing, and deleting notes
+- Duplicate titles handling
+- Tag manipulation and search
+- Sorting by title and modification date
+- Validation of note inputs (e.g., None or empty title)
+- Unicode, special characters, and edge-case searches
+"""
+
 import pytest
 from datetime import timedelta
 from organizer.services.notebook import Notebook

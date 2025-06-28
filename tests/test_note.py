@@ -1,3 +1,12 @@
+"""Tests for the Note class.
+
+This module checks the core functionality of the Note model, including:
+
+- Creation of notes with valid data
+- Validation to prevent empty titles
+- Proper assignment of tags and timestamps
+"""
+
 import pytest
 from datetime import datetime
 from organizer.models.note import Note
