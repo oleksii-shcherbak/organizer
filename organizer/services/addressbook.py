@@ -9,26 +9,32 @@ class AddressBook:
         self._contacts: dict[str, Contact] = {}
 
     def add(self, contact: Contact) -> None:
-        self._contacts[contact.name] = contact
+        key = normalize_text(contact.name)
+        self._contacts[key] = contact
 
     def get(self, name: str) -> Optional[Contact]:
-        return self._contacts.get(name)
+        key = normalize_text(name)
+        return self._contacts.get(key)
 
     def delete(self, name: str) -> bool:
-        return self._contacts.pop(name, None) is not None
+        key = normalize_text(name)
+        return self._contacts.pop(key, None) is not None
 
     def edit(self, name: str, updated_data: dict) -> bool:
-        contact = self._contacts.get(name)
+        normalized_name = normalize_text(name)
+        contact = self._contacts.get(normalized_name)
         if not contact:
             return False
 
         new_name = updated_data.get("name")
         if new_name:
             new_name = capitalize_name(new_name)
-            if new_name != contact.name:
-                self._contacts.pop(contact.name)
+            new_normalized = normalize_text(new_name)
+
+            if new_normalized != normalized_name:
+                self._contacts.pop(normalized_name)
                 contact.name = new_name
-                self._contacts[new_name] = contact
+                self._contacts[new_normalized] = contact
             else:
                 contact.name = new_name
 
