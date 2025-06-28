@@ -1,4 +1,5 @@
 import re
+from email.utils import parseaddr
 
 def validate_phone(phone: str) -> str:
     """
@@ -10,3 +11,14 @@ def validate_phone(phone: str) -> str:
     if not re.fullmatch(pattern, phone):
         raise ValueError(f"Invalid phone number format: '{phone}'")
     return phone
+
+def validate_email(email: str) -> str:
+    """
+    Validates that the email is in a proper format.
+    A valid email must contain '@' and a domain suffix like '.com'.
+    Raises ValueError if invalid.
+    """
+    name, addr = parseaddr(email)
+    if '@' not in addr or '.' not in addr.split('@')[-1]:
+        raise ValueError(f"Invalid email address format: '{email}'")
+    return email
