@@ -22,3 +22,9 @@ def validate_email(email: str) -> str:
     if '@' not in addr or '.' not in addr.split('@')[-1]:
         raise ValueError(f"Invalid email address format: '{email}'")
     return email
+
+def capitalize_name(name: str) -> str:
+    """
+    Capitalizes the first letter of the name and strips leading/trailing whitespace.
+    """
+    return name.strip().capitalize() if name else name
