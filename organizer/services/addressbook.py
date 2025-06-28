@@ -1,6 +1,7 @@
 from typing import Optional, List
 from datetime import date
 from organizer.models.contact import Contact
+from organizer.utils.validators import normalize_text
 
 
 class AddressBook:
@@ -24,7 +25,7 @@ class AddressBook:
 
     def search(self, query: str) -> List[Contact]:
         results = []
-        query_lower = query.lower()
+        query_norm = normalize_text(query)
         for contact in self._contacts.values():
             fields = [
                 contact.name,
@@ -36,7 +37,8 @@ class AddressBook:
                 contact.birthday.strftime("%d-%m-%Y") if contact.birthday else ""
             ]
             combined = " ".join(field or "" for field in fields)
-            if query_lower in combined.lower():
+            combined_norm = normalize_text(combined)
+            if query_norm in combined_norm:
                 results.append(contact)
         return results
 
