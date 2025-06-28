@@ -28,3 +28,11 @@ def capitalize_name(name: str) -> str:
     Capitalizes the first letter of the name and strips leading/trailing whitespace.
     """
     return name.strip().capitalize() if name else name
+
+def normalize_text(text: str) -> str:
+    """
+    Normalizes text for consistent comparison:
+    - Converts to lowercase
+    - Removes non-alphanumeric characters
+    """
+    return re.sub(r'\W+', '', text.lower())
