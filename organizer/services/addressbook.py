@@ -1,7 +1,7 @@
 from typing import Optional, List
 from datetime import date
 from organizer.models.contact import Contact
-from organizer.utils.validators import normalize_text
+from organizer.utils.validators import normalize_text, validate_phone, validate_email, capitalize_name
 
 
 class AddressBook:
@@ -17,11 +17,41 @@ class AddressBook:
     def delete(self, name: str) -> bool:
         return self._contacts.pop(name, None) is not None
 
-    def edit(self, name: str, updated: Contact) -> bool:
-        if name in self._contacts:
-            self._contacts[name] = updated
-            return True
-        return False
+    def edit(self, name: str, updated_data: dict) -> bool:
+        contact = self._contacts.get(name)
+        if not contact:
+            return False
+
+        new_name = updated_data.get("name")
+        if new_name:
+            new_name = capitalize_name(new_name)
+            if new_name != contact.name:
+                self._contacts.pop(contact.name)
+                contact.name = new_name
+                self._contacts[new_name] = contact
+            else:
+                contact.name = new_name
+
+        if "last_name" in updated_data:
+            contact.last_name = capitalize_name(updated_data["last_name"])
+
+        if "company" in updated_data:
+            contact.company = updated_data["company"]
+
+        if "phone" in updated_data:
+            contact.phone = validate_phone(updated_data["phone"])
+
+        if "address" in updated_data:
+            contact.address = updated_data["address"]
+
+        if "email" in updated_data:
+            contact.email = validate_email(updated_data["email"])
+
+        if "birthday" in updated_data:
+            contact.birthday = updated_data["birthday"]
+
+        contact.update_modified_time()
+        return True
 
     def search(self, query: str) -> List[Contact]:
         results = []
