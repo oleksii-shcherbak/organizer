@@ -23,5 +23,11 @@ class Note:
             self.tags = tags
         self.last_modified = datetime.now()
 
+    def add_tag(self, tag: str) -> None:
+        if not self.tags:
+            self.tags = []
+        self.tags.append(tag)
+        self.last_modified = datetime.now()
+
     def __repr__(self):
         return f"Note(title={self.title!r}, text={self.text!r} tags={self.tags!r})"
