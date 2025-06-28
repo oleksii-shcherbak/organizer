@@ -94,3 +94,72 @@ def test_edit_updates_modified_time(monkeypatch):
 
     assert updated.company == "TestCo"
     assert updated.last_modified is not None
+
+
+def test_addressbook_delete_nonexistent_contact_returns_false():
+    ab = AddressBook()
+    result = ab.delete("ghost")
+    assert result is False
+
+
+def test_addressbook_add_duplicate_name_overwrites():
+    ab = AddressBook()
+    contact1 = Contact(name="john", phone="+1234567890")
+    contact2 = Contact(name="john", email="john@example.com")
+    ab.add(contact1)
+    ab.add(contact2)  # Should overwrite
+    updated = ab.get("John")
+    assert updated.email == "john@example.com"
+    assert updated.phone == "+1234567890"  # Remains from first
+
+
+def test_addressbook_search_empty_query_returns_all():
+    ab = AddressBook()
+    ab.add(Contact(name="Alice"))
+    ab.add(Contact(name="Bob"))
+    results = ab.search("")
+    assert len(results) == 2
+
+
+def test_addressbook_edit_invalid_email_fails_gracefully():
+    ab = AddressBook()
+    ab.add(Contact(name="Clara"))
+    with pytest.raises(ValueError):
+        ab.edit("Clara", {"email": "bad-email"})
+
+
+def test_addressbook_add_contact_with_empty_name_raises():
+    ab = AddressBook()
+    with pytest.raises(ValueError):
+        ab.add(Contact(name=""))
+
+
+def test_addressbook_add_contact_with_none_name_raises():
+    ab = AddressBook()
+    with pytest.raises(ValueError):
+        ab.add(Contact(name=None))
+
+
+def test_addressbook_edit_name_to_existing_name_fails():
+    ab = AddressBook()
+    ab.add(Contact(name="Alice"))
+    ab.add(Contact(name="Bob"))
+    # Attempt renaming "Bob" to "Alice"
+    result = ab.edit("Bob", {"name": "alice"})
+    assert result is False
+
+
+def test_addressbook_edit_with_empty_dict_does_nothing():
+    ab = AddressBook()
+    ab.add(Contact(name="Charlie", phone="+123"))
+    result = ab.edit("Charlie", {})
+    assert result is True
+    contact = ab.get("Charlie")
+    assert contact.phone == "+123"  # unchanged
+
+
+def test_addressbook_edit_name_preserves_case_conflict():
+    ab = AddressBook()
+    ab.add(Contact(name="Daniel"))
+    result = ab.edit("Daniel", {"name": "daniel"})  # only case difference
+    assert result is True
