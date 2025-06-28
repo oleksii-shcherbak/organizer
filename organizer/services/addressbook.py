@@ -6,63 +6,64 @@ from organizer.utils.validators import normalize_text, validate_phone, validate_
 
 class AddressBook:
     def __init__(self) -> None:
-        self._contacts: dict[str, Contact] = {}
+        self._contacts: List[Contact] = []
 
     def add(self, contact: Contact) -> None:
+        if not contact.name or not contact.name.strip():
+            raise ValueError("Contact name cannot be empty or None.")
         key = normalize_text(contact.name)
-        self._contacts[key] = contact
+        self._contacts.append(contact)
 
-    def get(self, name: str) -> Optional[Contact]:
+    def get(self, name: str) -> List[Contact]:
         key = normalize_text(name)
-        return self._contacts.get(key)
+        return [c for c in self._contacts if normalize_text(c.name) == key]
 
     def delete(self, name: str) -> bool:
         key = normalize_text(name)
-        return self._contacts.pop(key, None) is not None
+        for i, contact in enumerate(self._contacts):
+            if normalize_text(contact.name) == key:
+                del self._contacts[i]
+                return True
+        return False
 
     def edit(self, name: str, updated_data: dict) -> bool:
-        normalized_name = normalize_text(name)
-        contact = self._contacts.get(normalized_name)
-        if not contact:
-            return False
+        key = normalize_text(name)
+        for contact in self._contacts:
+            if normalize_text(contact.name) == key:
+                new_name = updated_data.get("name")
+                if new_name:
+                    new_normalized = normalize_text(new_name)
+                    if new_normalized != key:
+                        if any(normalize_text(c.name) == new_normalized for c in self._contacts):
+                            return False
+                    contact.name = capitalize_name(new_name)
 
-        new_name = updated_data.get("name")
-        if new_name:
-            new_name = capitalize_name(new_name)
-            new_normalized = normalize_text(new_name)
+                if "last_name" in updated_data:
+                    contact.last_name = capitalize_name(updated_data["last_name"])
 
-            if new_normalized != normalized_name:
-                self._contacts.pop(normalized_name)
-                contact.name = new_name
-                self._contacts[new_normalized] = contact
-            else:
-                contact.name = new_name
+                if "company" in updated_data:
+                    contact.company = updated_data["company"]
 
-        if "last_name" in updated_data:
-            contact.last_name = capitalize_name(updated_data["last_name"])
+                if "phone" in updated_data:
+                    contact.phone = validate_phone(updated_data["phone"])
 
-        if "company" in updated_data:
-            contact.company = updated_data["company"]
+                if "address" in updated_data:
+                    contact.address = updated_data["address"]
 
-        if "phone" in updated_data:
-            contact.phone = validate_phone(updated_data["phone"])
+                if "email" in updated_data:
+                    contact.email = validate_email(updated_data["email"])
 
-        if "address" in updated_data:
-            contact.address = updated_data["address"]
+                if "birthday" in updated_data:
+                    contact.birthday = updated_data["birthday"]
 
-        if "email" in updated_data:
-            contact.email = validate_email(updated_data["email"])
-
-        if "birthday" in updated_data:
-            contact.birthday = updated_data["birthday"]
-
-        contact.update_modified_time()
-        return True
+                contact.update_modified_time()
+                return True
+        return False
 
     def search(self, query: str) -> List[Contact]:
         results = []
         query_norm = normalize_text(query)
-        for contact in self._contacts.values():
+        for contact in self._contacts:  # was: self._contacts.values()
             fields = [
                 contact.name,
                 contact.last_name,
@@ -79,7 +80,7 @@ class AddressBook:
         return results
 
     def all(self) -> List[Contact]:
-        return list(self._contacts.values())
+        return self._contacts
 
     def sort(self, by: str = "name") -> List[Contact]:
         if by == "name":

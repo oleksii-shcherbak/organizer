@@ -7,6 +7,8 @@ class Notebook:
         self._notes: List[Note] = []
 
     def add(self, note: Note) -> None:
+        if note is None:
+            raise AttributeError("Cannot add None as a note.")
         self._notes.append(note)
 
     def get(self, title: str) -> Optional[Note]:
@@ -23,6 +25,8 @@ class Notebook:
         return False
 
     def edit(self, title: str, updated: Note) -> bool:
+        if updated is None:
+            return False
         for i, note in enumerate(self._notes):
             if note.title == title:
                 self._notes[i] = updated

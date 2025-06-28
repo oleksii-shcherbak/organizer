@@ -13,8 +13,8 @@ def test_edit_contact_name_only():
 
     assert result is True
     assert ab.get("Johnny") is not None
-    assert ab.get("john") is None
-    assert ab.get("Johnny").name == "Johnny"
+    assert ab.get("john") == []
+    assert ab.get("Johnny")[0].name == "Johnny"
 
 
 def test_edit_multiple_fields():
@@ -31,7 +31,7 @@ def test_edit_multiple_fields():
         "birthday": date(1995, 5, 20)
     })
 
-    updated = ab.get("Anna")
+    updated = ab.get("Anna")[0]
 
     assert result is True
     assert updated.last_name == "Smith"
@@ -90,7 +90,7 @@ def test_edit_updates_modified_time(monkeypatch):
     monkeypatch.setattr("organizer.models.contact.date", lambda: test_date)
 
     ab.edit("Zack", {"company": "TestCo"})
-    updated = ab.get("Zack")
+    updated = ab.get("Zack")[0]
 
     assert updated.company == "TestCo"
     assert updated.last_modified is not None
@@ -102,15 +102,22 @@ def test_addressbook_delete_nonexistent_contact_returns_false():
     assert result is False
 
 
-def test_addressbook_add_duplicate_name_overwrites():
+def test_addressbook_add_duplicate_name_all_preserved():
     ab = AddressBook()
     contact1 = Contact(name="john", phone="+1234567890")
     contact2 = Contact(name="john", email="john@example.com")
     ab.add(contact1)
-    ab.add(contact2)  # Should overwrite
-    updated = ab.get("John")
-    assert updated.email == "john@example.com"
-    assert updated.phone == "+1234567890"  # Remains from first
+    ab.add(contact2)
+
+    results = ab.get("John")
+    assert isinstance(results, list)
+    assert len(results) == 2
+
+    phones = [c.phone for c in results]
+    emails = [c.email for c in results]
+
+    assert "+1234567890" in phones
+    assert "john@example.com" in emails
 
 
 def test_addressbook_search_empty_query_returns_all():
@@ -154,7 +161,7 @@ def test_addressbook_edit_with_empty_dict_does_nothing():
     ab.add(Contact(name="Charlie", phone="+123"))
     result = ab.edit("Charlie", {})
     assert result is True
-    contact = ab.get("Charlie")
+    contact = ab.get("Charlie")[0]
     assert contact.phone == "+123"  # unchanged
 
 
