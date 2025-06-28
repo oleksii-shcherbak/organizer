@@ -1,4 +1,4 @@
-from typing import List
+from typing import Optional, List
 from organizer.models.note import Note
 
 
@@ -8,6 +8,12 @@ class Notebook:
 
     def add(self, note: Note) -> None:
         self._notes.append(note)
+
+    def get(self, title: str) -> Optional[Note]:
+        for note in self._notes:
+            if note.title == title:
+                return note
+        return None
 
     def delete(self, title: str) -> bool:
         for i, note in enumerate(self._notes):
