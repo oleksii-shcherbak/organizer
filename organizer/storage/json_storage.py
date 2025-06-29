@@ -7,6 +7,7 @@ from organizer.services.addressbook import AddressBook
 from organizer.services.notebook import Notebook
 from organizer.models.contact import Contact
 from organizer.models.note import Note
+from organizer.utils.exceptions import OrganizerError
 
 
 class JSONStorage:
@@ -74,8 +75,22 @@ class JSONStorage:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
     def _load_from_file(self, path: Path) -> Any:
-        with path.open("r", encoding="utf-8") as f:
-            return json.load(f)
+        """Loads data from a JSON file.
+
+        Args:
+            path (Path): The file path to load data from.
+
+        Returns:
+            Any: The deserialized JSON content.
+
+        Raises:
+            OrganizerError: If the file is not a valid JSON.
+        """
+        try:
+            with path.open("r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            raise OrganizerError(f"Failed to load JSON file: {e}")
 
     def _contact_to_dict(self, contact: Contact) -> dict:
         return {
@@ -90,16 +105,30 @@ class JSONStorage:
         }
 
     def _dict_to_contact(self, data: dict) -> Contact:
-        return Contact(
-            name=data["name"],
-            last_name=data.get("last_name"),
-            company=data.get("company"),
-            phone=data.get("phone"),
-            address=data.get("address"),
-            birthday=date.fromisoformat(data["birthday"]) if data.get("birthday") else None,
-            email=data.get("email"),
-            last_modified=datetime.fromisoformat(data["last_modified"]),
-        )
+        """Converts dictionary data into a Contact instance.
+
+        Args:
+            data (dict): Dictionary containing contact fields.
+
+        Returns:
+            Contact: Contact object.
+
+        Raises:
+            OrganizerError: If required fields are missing or invalid.
+        """
+        try:
+            return Contact(
+                name=data["name"],
+                last_name=data.get("last_name"),
+                company=data.get("company"),
+                phone=data.get("phone"),
+                address=data.get("address"),
+                birthday=date.fromisoformat(data["birthday"]) if data.get("birthday") else None,
+                email=data.get("email"),
+                last_modified=datetime.fromisoformat(data["last_modified"]),
+            )
+        except (KeyError, TypeError, ValueError) as e:
+            raise OrganizerError(f"Invalid contact data: {e}")
 
     def _note_to_dict(self, note: Note) -> dict:
         return {
@@ -110,10 +139,24 @@ class JSONStorage:
         }
 
     def _dict_to_note(self, data: dict) -> Note:
-        note = Note(
-            title=data["title"],
-            text=data.get("text"),
-            tags=data.get("tags", [])
-        )
-        note.last_modified = datetime.fromisoformat(data["last_modified"])
-        return note
+        """Converts dictionary data into a Note instance.
+
+        Args:
+            data (dict): Dictionary containing note fields.
+
+        Returns:
+            Note: Note object.
+
+        Raises:
+            OrganizerError: If required fields are missing or invalid.
+        """
+        try:
+            note = Note(
+                title=data["title"],
+                text=data.get("text"),
+                tags=data.get("tags", [])
+            )
+            note.last_modified = datetime.fromisoformat(data["last_modified"])
+            return note
+        except (KeyError, TypeError, ValueError) as e:
+            raise OrganizerError(f"Invalid note data: {e}")
