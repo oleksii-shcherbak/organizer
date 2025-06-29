@@ -10,6 +10,7 @@ This module checks the core functionality of the Note model, including:
 import pytest
 from datetime import datetime
 from organizer.models.note import Note
+from organizer.utils.exceptions import ValidationError
 
 
 def test_note_creation():
@@ -20,5 +21,5 @@ def test_note_creation():
 
 
 def test_note_empty_title_raises():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         Note(title="", text="Some text")

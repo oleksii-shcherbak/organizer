@@ -10,6 +10,7 @@ This module verifies the behavior of the Contact data model, including:
 
 import pytest
 from organizer.models.contact import Contact
+from organizer.utils.exceptions import ValidationError
 
 
 def test_contact_initialization():
@@ -21,12 +22,12 @@ def test_contact_initialization():
 
 
 def test_contact_invalid_email():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         Contact(name="john", email="not-an-email")
 
 
 def test_contact_invalid_phone():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         Contact(name="john", phone="invalid-phone")
 
 

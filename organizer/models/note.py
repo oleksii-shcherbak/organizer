@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
+from organizer.utils.exceptions import ValidationError
 
 
 class Note:
@@ -21,17 +22,22 @@ class Note:
             tags (Optional[List[str]]): Optional list of tags. Defaults to an empty list.
 
         Raises:
-            ValueError: If the title is empty or only whitespace.
+            ValidationError: If the title is empty or only whitespace.
         """
-        if not title.strip():
-            raise ValueError("Note title cannot be empty.")
+        if not title or not title.strip():
+            raise ValidationError("Note title cannot be empty.")
 
         self.title = title.strip()
         self.text = text or ""
         self.tags = tags or []
         self.last_modified = datetime.now()
 
-    def update(self, title: Optional[str] = None, text: Optional[str] = None, tags: Optional[List[str]] = None):
+    def update(
+        self,
+        title: Optional[str] = None,
+        text: Optional[str] = None,
+        tags: Optional[List[str]] = None
+    ) -> None:
         """Updates the title, text, and/or tags of the note.
 
         Args:
@@ -40,16 +46,19 @@ class Note:
             tags (Optional[List[str]]): New list of tags.
 
         Raises:
-            ValueError: If the new title is empty or only whitespace.
+            ValidationError: If the new title is empty or only whitespace.
         """
         if title is not None:
             if not title.strip():
-                raise ValueError("Note title cannot be empty.")
+                raise ValidationError("Note title cannot be empty.")
             self.title = title.strip()
+
         if text is not None:
             self.text = text
+
         if tags is not None:
             self.tags = tags
+
         self.last_modified = datetime.now()
 
     def add_tag(self, tag: str) -> None:
@@ -58,12 +67,12 @@ class Note:
         Args:
             tag (str): The tag to be added.
         """
-        if not self.tags:
-            self.tags = []
-        self.tags.append(tag)
+        if not isinstance(tag, str) or not tag.strip():
+            raise ValidationError("Tag must be a non-empty string.")
+        self.tags.append(tag.strip())
         self.last_modified = datetime.now()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Returns a string representation of the Note object.
 
         Returns:

@@ -1,11 +1,13 @@
 import re
 from email.utils import parseaddr
+from organizer.utils.exceptions import ValidationError
 
 
 def validate_phone(phone: str) -> str:
     """Validates the phone number format.
 
-    The phone number may include digits, plus signs, minus signs, parentheses, and spaces.
+    The phone number may include digits, plus signs, minus signs,
+    parentheses, and spaces. It must match the allowed pattern.
 
     Args:
         phone (str): The phone number to validate.
@@ -14,18 +16,18 @@ def validate_phone(phone: str) -> str:
         str: The validated phone number.
 
     Raises:
-        ValueError: If the phone number format is invalid.
+        ValidationError: If the phone number format is invalid.
     """
     pattern = r"^[\d\+\-\(\)\s]+$"
-    if not re.fullmatch(pattern, phone):
-        raise ValueError(f"Invalid phone number format: '{phone}'")
+    if not phone or not re.fullmatch(pattern, phone):
+        raise ValidationError(f"Invalid phone number format: '{phone}'")
     return phone
 
 
 def validate_email(email: str) -> str:
     """Validates the email address format.
 
-    A valid email must contain an '@' and a domain suffix like '.com'.
+    A valid email must contain '@' and a domain with '.'.
 
     Args:
         email (str): The email address to validate.
@@ -34,11 +36,11 @@ def validate_email(email: str) -> str:
         str: The validated email address.
 
     Raises:
-        ValueError: If the email address format is invalid.
+        ValidationError: If the email address format is invalid.
     """
     name, addr = parseaddr(email)
-    if '@' not in addr or '.' not in addr.split('@')[-1]:
-        raise ValueError(f"Invalid email address format: '{email}'")
+    if not email or '@' not in addr or '.' not in addr.split('@')[-1]:
+        raise ValidationError(f"Invalid email address format: '{email}'")
     return email
 
 
@@ -50,8 +52,13 @@ def capitalize_name(name: str) -> str:
 
     Returns:
         str: The capitalized name.
+
+    Raises:
+        ValidationError: If the name is None or empty.
     """
-    return name.strip().capitalize() if name else name
+    if not name or not name.strip():
+        raise ValidationError("Name cannot be empty or None.")
+    return name.strip().capitalize()
 
 
 def normalize_text(text: str) -> str:

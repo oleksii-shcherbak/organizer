@@ -61,7 +61,7 @@ def test_edit_invalid_email_should_fail():
     contact = Contact(name="Lucas")
     ab.add(contact)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         ab.edit("Lucas", {"email": "invalid-email"})
 
 
@@ -70,7 +70,7 @@ def test_edit_invalid_phone_should_fail():
     contact = Contact(name="Mike")
     ab.add(contact)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         ab.edit("Mike", {"phone": "no_digits"})
 
 
@@ -144,7 +144,7 @@ def test_addressbook_search_empty_query_returns_all():
 def test_addressbook_edit_invalid_email_fails_gracefully():
     ab = AddressBook()
     ab.add(Contact(name="Clara"))
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         ab.edit("Clara", {"email": "bad-email"})
 
 
