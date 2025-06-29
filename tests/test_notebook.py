@@ -14,7 +14,11 @@ import pytest
 from datetime import timedelta
 from organizer.services.notebook import Notebook
 from organizer.models.note import Note
-from organizer.utils.exceptions import NoteNotFoundError, ValidationError
+from organizer.utils.exceptions import (
+    NoteNotFoundError,
+    ValidationError,
+    DuplicateEntryError,
+)
 
 
 def test_notebook_add_and_get_note():
@@ -78,9 +82,9 @@ def test_notebook_add_duplicate_title_allowed():
     note1 = Note(title="Same", text="First")
     note2 = Note(title="Same", text="Second")
     notebook.add(note1)
-    notebook.add(note2)
-    results = notebook.search("Same")
-    assert len(results) == 2
+
+    with pytest.raises(DuplicateEntryError):
+        notebook.add(note2)
 
 
 def test_note_creation_with_empty_tag_list():
@@ -102,7 +106,7 @@ def test_notebook_edit_successfully_changes_note():
 
 def test_notebook_add_none_raises_exception():
     notebook = Notebook()
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValidationError):
         notebook.add(None)
 
 

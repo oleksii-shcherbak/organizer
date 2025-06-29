@@ -1,6 +1,10 @@
 from typing import Optional, List
 from organizer.models.note import Note
-from organizer.utils.exceptions import NoteNotFoundError, ValidationError
+from organizer.utils.exceptions import (
+    NoteNotFoundError,
+    ValidationError,
+    DuplicateEntryError,
+)
 
 
 class Notebook:
@@ -17,10 +21,15 @@ class Notebook:
             note (Note): The note to add.
 
         Raises:
-            AttributeError: If the note is None.
+            ValidationError: If the note is None or lacks a title.
+            DuplicateEntryError: If a note with the same title already exists.
         """
         if note is None:
-            raise AttributeError("Cannot add None as a note.")
+            raise ValidationError("Note cannot be None.")
+        if not note.title or not note.title.strip():
+            raise ValidationError("Note title cannot be empty.")
+        if any(n.title == note.title for n in self._notes):
+            raise DuplicateEntryError("Duplicate note title", note.title)
         self._notes.append(note)
 
     def get(self, title: str) -> Optional[Note]:

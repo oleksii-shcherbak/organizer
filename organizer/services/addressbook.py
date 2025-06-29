@@ -29,18 +29,21 @@ class AddressBook:
 
         Raises:
             ValidationError: If the contact has no name.
-            DuplicateEntryError: If an identical contact already exists.
+            DuplicateEntryError: If a contact with the same name and phone or email already exists.
         """
         if not contact.name or not contact.name.strip():
             raise ValidationError("Contact name cannot be empty or None.")
 
-        if any(
-            c.name.lower() == contact.name.lower()
-            and c.phone == contact.phone
-            and c.email == contact.email
-            for c in self._contacts
-        ):
-            raise DuplicateEntryError(f"Duplicate contact: {contact.name}")
+        name_normalized = contact.name.strip().lower()
+
+        for existing in self._contacts:
+            if existing.name.strip().lower() == name_normalized:
+                same_phone = contact.phone and contact.phone == existing.phone
+                same_email = contact.email and contact.email == existing.email
+                if same_phone or same_email:
+                    raise DuplicateEntryError(
+                        f"A contact with the same name and phone/email already exists: {contact.name}"
+                    )
 
         self._contacts.append(contact)
 
