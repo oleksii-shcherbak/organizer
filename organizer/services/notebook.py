@@ -1,5 +1,6 @@
 from typing import Optional, List
 from organizer.models.note import Note
+from organizer.utils.exceptions import NoteNotFoundError, ValidationError
 
 
 class Notebook:
@@ -29,12 +30,15 @@ class Notebook:
             title (str): The title of the note to retrieve.
 
         Returns:
-            Optional[Note]: The found note, or None if not found.
+            Note: The found note with the given title.
+
+        Raises:
+            NoteNotFoundError: If no note with the given title is found.
         """
         for note in self._notes:
             if note.title == title:
                 return note
-        return None
+        raise NoteNotFoundError(title)
 
     def delete(self, title: str) -> bool:
         """Deletes the first note found with the given title.
@@ -43,31 +47,40 @@ class Notebook:
             title (str): The title of the note to delete.
 
         Returns:
-            bool: True if a note was deleted, False otherwise.
+            bool: True if a note was deleted.
+
+        Raises:
+            NoteNotFoundError: If no note with the given title is found.
         """
         for i, note in enumerate(self._notes):
             if note.title == title:
                 del self._notes[i]
                 return True
-        return False
+        raise NoteNotFoundError(title)
 
     def edit(self, title: str, updated: Note) -> bool:
-        """Replaces the note with the given title using a new note.
+        """Edits a note by replacing it with the provided updated note.
 
         Args:
-            title (str): The title of the note to replace.
-            updated (Note): The new note object.
+            title (str): The title of the note to be edited.
+            updated (Note): The updated note instance.
 
         Returns:
-            bool: True if the note was replaced, False if not found or updated is None.
+            bool: True if the note was successfully edited.
+
+        Raises:
+            NoteNotFoundError: If no note with the given title is found.
+            ValidationError: If the updated note is None.
         """
         if updated is None:
-            return False
+            raise ValidationError("Cannot edit with a None note.")
+
         for i, note in enumerate(self._notes):
             if note.title == title:
                 self._notes[i] = updated
                 return True
-        return False
+
+        raise NoteNotFoundError(title)
 
     def search(self, query: str) -> List[Note]:
         """Searches for notes that contain the query in the title, text, or tags.

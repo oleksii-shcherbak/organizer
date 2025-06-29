@@ -14,6 +14,7 @@ import pytest
 from datetime import timedelta
 from organizer.services.notebook import Notebook
 from organizer.models.note import Note
+from organizer.utils.exceptions import NoteNotFoundError, ValidationError
 
 
 def test_notebook_add_and_get_note():
@@ -32,7 +33,9 @@ def test_notebook_delete_note():
     notebook.add(note)
 
     assert notebook.delete("Note2") is True
-    assert notebook.get("Note2") is None
+
+    with pytest.raises(NoteNotFoundError):
+        notebook.get("Note2")
 
 
 def test_notebook_search():
@@ -47,17 +50,19 @@ def test_notebook_search():
     assert results[0].title == "Buy Milk"
 
 
-def test_notebook_delete_nonexistent_note_returns_false():
+def test_notebook_delete_nonexistent_note_raises():
     notebook = Notebook()
-    result = notebook.delete("NonExistent")
-    assert result is False
+    with pytest.raises(NoteNotFoundError) as exc_info:
+        notebook.delete("NonExistent")
+    assert "NonExistent" in str(exc_info.value)
 
 
-def test_notebook_edit_nonexistent_note_returns_false():
+def test_notebook_edit_nonexistent_note_raises():
     notebook = Notebook()
     dummy_note = Note(title="Dummy", text="This won't be added")
-    result = notebook.edit("NonExistent", updated=dummy_note)
-    assert result is False
+    with pytest.raises(NoteNotFoundError) as exc_info:
+        notebook.edit("NonExistent", updated=dummy_note)
+    assert "NonExistent" in str(exc_info.value)
 
 
 def test_notebook_search_returns_empty_for_no_match():
@@ -101,18 +106,20 @@ def test_notebook_add_none_raises_exception():
         notebook.add(None)
 
 
-def test_notebook_edit_with_none_fails_gracefully():
+def test_notebook_edit_with_none_raises_validation_error():
     notebook = Notebook()
     notebook.add(Note(title="Note", text="Text"))
-    result = notebook.edit("Note", None)
-    assert result is False
+    with pytest.raises(ValidationError) as exc_info:
+        notebook.edit("Note", None)
+    assert "Cannot edit with a None note" in str(exc_info.value)
 
 
 def test_notebook_get_case_sensitive():
     notebook = Notebook()
     notebook.add(Note(title="Important", text="case test"))
-    assert notebook.get("important") is None
-    assert notebook.get("Important") is not None
+
+    with pytest.raises(NoteNotFoundError):
+        notebook.get("important")
 
 
 def test_sort_by_title():
