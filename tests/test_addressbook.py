@@ -14,6 +14,7 @@ import pytest
 from datetime import date
 from organizer.models.contact import Contact
 from organizer.services.addressbook import AddressBook
+from organizer.utils.exceptions import ContactNotFoundError, ValidationError
 
 
 def test_edit_contact_name_only():
@@ -25,7 +26,8 @@ def test_edit_contact_name_only():
 
     assert result is True
     assert ab.get("Johnny") is not None
-    assert ab.get("john") == []
+    with pytest.raises(ContactNotFoundError):
+        ab.get("john")
     assert ab.get("Johnny")[0].name == "Johnny"
 
 
@@ -75,9 +77,8 @@ def test_edit_invalid_phone_should_fail():
 def test_edit_nonexistent_contact_returns_false():
     ab = AddressBook()
 
-    result = ab.edit("Ghost", {"email": "ghost@example.com"})
-
-    assert result is False
+    with pytest.raises(ContactNotFoundError):
+        ab.edit("Ghost", {"email": "ghost@example.com"})
 
 
 def test_edit_name_to_same_name_does_not_duplicate():
@@ -108,10 +109,10 @@ def test_edit_updates_modified_time(monkeypatch):
     assert updated.last_modified is not None
 
 
-def test_addressbook_delete_nonexistent_contact_returns_false():
+def test_addressbook_delete_nonexistent_contact_raises():
     ab = AddressBook()
-    result = ab.delete("ghost")
-    assert result is False
+    with pytest.raises(ContactNotFoundError):
+        ab.delete("ghost")
 
 
 def test_addressbook_add_duplicate_name_all_preserved():
@@ -149,13 +150,13 @@ def test_addressbook_edit_invalid_email_fails_gracefully():
 
 def test_addressbook_add_contact_with_empty_name_raises():
     ab = AddressBook()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         ab.add(Contact(name=""))
 
 
 def test_addressbook_add_contact_with_none_name_raises():
     ab = AddressBook()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         ab.add(Contact(name=None))
 
 
