@@ -132,3 +132,112 @@ def test_missing_required_note_field_should_raise(storage, temp_dir):
 
     with pytest.raises(OrganizerError):
         storage.load_notebook()
+
+
+def test_edit_contact(storage):
+    ab = AddressBook()
+    contact = Contact(name="John", phone="+123")
+    ab.add(contact)
+
+    ab.edit("John", {"phone": "+999", "email": "john@example.com"})
+
+    edited = ab.search("John")[0]
+    assert edited.phone == "+999"
+    assert edited.email == "john@example.com"
+
+def test_delete_contact(storage):
+    ab = AddressBook()
+    ab.add(Contact(name="Jane"))
+    ab.delete("Jane")
+
+    results = ab.search("Jane")
+    assert results == []
+
+def test_search_contact_partial(storage):
+    ab = AddressBook()
+    ab.add(Contact(name="Michael Johnson", email="mj@example.com"))
+    ab.add(Contact(name="Michelle", phone="+456"))
+
+    results = ab.search("Mich")
+    assert len(results) == 2
+    assert any("Michael" in c.name for c in results)
+    assert any("Michelle" in c.name for c in results)
+
+
+def test_edit_note():
+    nb = Notebook()
+    note = Note(title="Original Title", text="Some text", tags=["old"])
+    nb.add(note)
+    old_modified = note.last_modified
+
+    nb.edit("Original Title", {"tags": ["updated", "new"]})
+
+    assert nb.notes[0].title == "Original Title"
+    assert nb.notes[0].text == "Some text"
+    assert nb.notes[0].tags == ["updated", "new"]
+    assert nb.notes[0].last_modified > old_modified
+
+
+def test_delete_note():
+    nb = Notebook()
+    note = Note(title="Temporary", text="To be deleted")
+    nb.add(note)
+
+    nb.delete("Temporary")
+    results = nb.search("Temporary")
+    assert results == []
+
+
+def test_search_note_partial_match():
+    nb = Notebook()
+    nb.add(Note(title="Meeting Notes", text="Discuss project roadmap", tags=["work"]))
+    nb.add(Note(title="Shopping List", text="Buy milk, eggs, and bread"))
+
+    results = nb.search("roadmap")
+    assert len(results) == 1
+    assert "project" in results[0].text
+
+    results = nb.search("Shop")
+    assert len(results) == 1
+    assert results[0].title == "Shopping List"
+
+
+def test_sort_notes_by_title():
+    nb = Notebook()
+    nb.add(Note(title="Bravo", text="..."))
+    nb.add(Note(title="alpha", text="..."))
+    nb.add(Note(title="Charlie", text="..."))
+
+    sorted_notes = nb.sorted(by="title")
+    titles = [note.title for note in sorted_notes]
+
+    assert titles == ["alpha", "Bravo", "Charlie"]
+
+
+def test_sort_notes_by_last_modified():
+    nb = Notebook()
+    note1 = Note(title="Note1", text="Oldest")
+    note2 = Note(title="Note2", text="Middle")
+    note3 = Note(title="Note3", text="Latest")
+
+    nb.add(note1)
+    nb.add(note2)
+    nb.add(note3)
+
+    note3.text = "Updated"
+    note3.update_modified_time()
+
+    note2.text = "Also updated"
+    note2.update_modified_time()
+
+    sorted_notes = nb.sorted(by="last_modified")
+    titles = [note.title for note in sorted_notes]
+
+    assert titles == ["Note2", "Note3", "Note1"]
+
+
+def test_sort_notes_invalid_key_should_raise():
+    nb = Notebook()
+    nb.add(Note(title="One"))
+    with pytest.raises(ValueError):
+        nb.sorted(by="unknown_key")

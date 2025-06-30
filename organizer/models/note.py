@@ -72,6 +72,10 @@ class Note:
         self.tags.append(tag.strip())
         self.last_modified = datetime.now()
 
+    def update_modified_time(self) -> None:
+        """Update the last_modified field to the current datetime."""
+        self.last_modified = datetime.now()
+
     def __repr__(self) -> str:
         """Returns a string representation of the Note object.
 

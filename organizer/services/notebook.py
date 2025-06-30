@@ -5,6 +5,7 @@ from organizer.utils.exceptions import (
     ValidationError,
     DuplicateEntryError,
 )
+from organizer.utils.validators import normalize_text
 
 
 class Notebook:
@@ -67,28 +68,37 @@ class Notebook:
                 return True
         raise NoteNotFoundError(title)
 
-    def edit(self, title: str, updated: Note) -> bool:
-        """Edits a note by replacing it with the provided updated note.
+    def edit(self, title: str, updated_data: dict) -> bool:
+        """Edits the first note found with the given title.
 
         Args:
-            title (str): The title of the note to be edited.
-            updated (Note): The updated note instance.
+            title (str): The title of the note to edit.
+            updated_data (dict): Dictionary with fields to update.
 
         Returns:
-            bool: True if the note was successfully edited.
+            bool: True if a note was updated.
 
         Raises:
-            NoteNotFoundError: If no note with the given title is found.
-            ValidationError: If the updated note is None.
+            NoteNotFoundError: If no note with the given title was found.
+            ValidationError: If provided updated data is invalid.
         """
-        if updated is None:
-            raise ValidationError("Cannot edit with a None note.")
+        if updated_data is None:
+            raise ValidationError("Cannot edit with None data.")
 
-        for i, note in enumerate(self._notes):
-            if note.title == title:
-                self._notes[i] = updated
+        key = normalize_text(title)
+        for note in self._notes:
+            if normalize_text(note.title) == key:
+                for field, value in updated_data.items():
+                    if field == "title":
+                        if not value or not value.strip():
+                            raise ValidationError("Title cannot be empty.")
+                        note.title = value.strip()
+                    elif field == "text":
+                        note.text = value or ""
+                    elif field == "tags":
+                        note.tags = value if isinstance(value, list) else []
+                note.update_modified_time()
                 return True
-
         raise NoteNotFoundError(title)
 
     def search(self, query: str) -> List[Note]:
@@ -134,3 +144,7 @@ class Notebook:
             return sorted(self._notes, key=lambda n: n.last_modified, reverse=True)
         else:
             raise ValueError("Unsupported sort key. Use 'title' or 'last_modified'.")
+
+    @property
+    def notes(self) -> list:
+        return self._notes

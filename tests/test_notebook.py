@@ -63,10 +63,9 @@ def test_notebook_delete_nonexistent_note_raises():
 
 def test_notebook_edit_nonexistent_note_raises():
     notebook = Notebook()
-    dummy_note = Note(title="Dummy", text="This won't be added")
-    with pytest.raises(NoteNotFoundError) as exc_info:
-        notebook.edit("NonExistent", updated=dummy_note)
-    assert "NonExistent" in str(exc_info.value)
+    with pytest.raises(NoteNotFoundError) as exc:
+        notebook.edit("NonExistent", {"text": "Changed"})
+    assert "NonExistent" in str(exc.value)
 
 
 def test_notebook_search_returns_empty_for_no_match():
@@ -97,11 +96,11 @@ def test_notebook_edit_successfully_changes_note():
     note = Note(title="Plan", text="Old text", tags=["old"])
     updated = Note(title="Plan", text="Updated text", tags=["new"])
     notebook.add(note)
-    result = notebook.edit("Plan", updated)
+    result = notebook.edit("Plan", {"text": "Updated text", "tags": ["new"]})
     assert result is True
-    changed = notebook.get("Plan")
-    assert changed.text == "Updated text"
-    assert changed.tags == ["new"]
+    note = notebook.all()[0]
+    assert note.text == "Updated text"
+    assert note.tags == ["new"]
 
 
 def test_notebook_add_none_raises_exception():
@@ -113,9 +112,9 @@ def test_notebook_add_none_raises_exception():
 def test_notebook_edit_with_none_raises_validation_error():
     notebook = Notebook()
     notebook.add(Note(title="Note", text="Text"))
-    with pytest.raises(ValidationError) as exc_info:
+    with pytest.raises(ValidationError) as exc:
         notebook.edit("Note", None)
-    assert "Cannot edit with a None note" in str(exc_info.value)
+    assert "None" in str(exc.value)
 
 
 def test_notebook_get_case_sensitive():
