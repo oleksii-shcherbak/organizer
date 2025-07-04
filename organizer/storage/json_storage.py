@@ -11,18 +11,25 @@ from organizer.utils.exceptions import OrganizerError
 
 
 class JSONStorage:
-    """Handles saving and loading AddressBook and Notebook data to/from JSON files."""
+    """Handles saving and loading AddressBook and Notebook data to/from JSON files.
+
+    Automatically loads existing data during initialization.
+    """
 
     def __init__(self, base_dir: str = "data"):
-        """Initializes the storage paths for contacts and notes.
+        """Initializes the storage paths and loads any existing AddressBook and Notebook data.
 
         Args:
-            base_dir (str): Directory where JSON files will be saved.
+            base_dir (str): Directory where JSON files will be saved and loaded from.
         """
         self.base_path = Path(base_dir)
         self.base_path.mkdir(parents=True, exist_ok=True)
         self.contacts_path = self.base_path / "contacts.json"
         self.notes_path = self.base_path / "notes.json"
+
+        # Automatically load if data exists, else create empty structures
+        self.addressbook = self.load_addressbook()
+        self.notebook = self.load_notebook()
 
     def save_addressbook(self, addressbook: AddressBook) -> None:
         """Serializes and saves the AddressBook to a JSON file.
@@ -37,7 +44,7 @@ class JSONStorage:
         """Loads the AddressBook from a JSON file.
 
         Returns:
-            AddressBook: The loaded address book.
+            AddressBook: The loaded address book. If no file exists, returns an empty instance.
         """
         addressbook = AddressBook()
         if self.contacts_path.exists():
@@ -60,7 +67,7 @@ class JSONStorage:
         """Loads the Notebook from a JSON file.
 
         Returns:
-            Notebook: The loaded notebook.
+            Notebook: The loaded notebook. If no file exists, returns an empty instance.
         """
         notebook = Notebook()
         if self.notes_path.exists():

@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Callable
 from organizer.models.note import Note
 from organizer.utils.exceptions import (
     NoteNotFoundError,
@@ -9,11 +9,19 @@ from organizer.utils.validators import normalize_text
 
 
 class Notebook:
-    """Manages a collection of Note objects with operations like add, edit, delete, search, and sort."""
+    """Manages a collection of Note objects with operations like add, edit, delete, search, and sort.
 
-    def __init__(self) -> None:
-        """Initializes an empty Notebook."""
+    Optionally supports automatic persistence using a callback function.
+    """
+
+    def __init__(self, save_callback: Optional[Callable] = None) -> None:
+        """Initializes an empty Notebook.
+
+        Args:
+            save_callback (Callable, optional): A function to call after each modification.
+        """
         self._notes: List[Note] = []
+        self._save_callback = save_callback
 
     def add(self, note: Note) -> None:
         """Adds a note to the notebook.
@@ -32,6 +40,7 @@ class Notebook:
         if any(n.title == note.title for n in self._notes):
             raise DuplicateEntryError("Duplicate note title", note.title)
         self._notes.append(note)
+        self._autosave()
 
     def get(self, title: str) -> Optional[Note]:
         """Retrieves a note by its title.
@@ -65,6 +74,7 @@ class Notebook:
         for i, note in enumerate(self._notes):
             if note.title == title:
                 del self._notes[i]
+                self._autosave()
                 return True
         raise NoteNotFoundError(title)
 
@@ -98,6 +108,7 @@ class Notebook:
                     elif field == "tags":
                         note.tags = value if isinstance(value, list) else []
                 note.update_modified_time()
+                self._autosave()
                 return True
         raise NoteNotFoundError(title)
 
@@ -147,4 +158,14 @@ class Notebook:
 
     @property
     def notes(self) -> list:
+        """Provides direct access to the internal list of notes (read-only).
+
+        Returns:
+            list: The list of note objects.
+        """
         return self._notes
+
+    def _autosave(self) -> None:
+        """Triggers the save callback if defined."""
+        if self._save_callback:
+            self._save_callback()

@@ -1,4 +1,4 @@
-from typing import List
+from typing import Optional, List, Callable
 from datetime import date
 from organizer.models.contact import Contact
 from organizer.utils.validators import (
@@ -17,9 +17,14 @@ from organizer.utils.exceptions import (
 class AddressBook:
     """Manages a collection of Contact objects with operations like add, edit, delete, search, and sort."""
 
-    def __init__(self) -> None:
-        """Initializes an empty AddressBook."""
+    def __init__(self, save_callback: Optional[Callable[[], None]] = None) -> None:
+        """Initializes an empty AddressBook.
+
+        Args:
+            save_callback (Callable, optional): A function to call after data-changing operations.
+        """
         self._contacts: List[Contact] = []
+        self._save_callback = save_callback
 
     def add(self, contact: Contact) -> None:
         """Adds a contact to the address book.
@@ -46,6 +51,7 @@ class AddressBook:
                     )
 
         self._contacts.append(contact)
+        self._autosave()
 
     def get(self, name: str) -> List[Contact]:
         """Retrieves all contacts with a given name.
@@ -83,6 +89,8 @@ class AddressBook:
         ]
         if len(self._contacts) == initial_count:
             raise ContactNotFoundError(name)
+
+        self._autosave()
         return True
 
     def edit(self, name: str, updated_data: dict) -> bool:
@@ -122,6 +130,7 @@ class AddressBook:
                             raise ValidationError("Birthday must be a date object.")
                         contact.birthday = value
                 contact.update_modified_time()
+                self._autosave()
                 return True
         raise ContactNotFoundError(name)
 
@@ -198,3 +207,8 @@ class AddressBook:
                 except ValueError:
                     continue  # skip Feb 29 on non-leap years
         return upcoming
+
+    def _autosave(self) -> None:
+        """Triggers the save callback if defined."""
+        if self._save_callback:
+            self._save_callback()
