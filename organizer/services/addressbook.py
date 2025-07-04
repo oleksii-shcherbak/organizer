@@ -26,11 +26,13 @@ class AddressBook:
         self._contacts: List[Contact] = []
         self._save_callback = save_callback
 
-    def add(self, contact: Contact) -> None:
+    def add(self, contact: Contact, preserve_modified_time: bool = False) -> None:
         """Adds a contact to the address book.
 
         Args:
             contact (Contact): The contact to add.
+            preserve_modified_time (bool): Whether to preserve the original 'last_modified' timestamp
+                (used during JSON loading). Defaults to False.
 
         Raises:
             ValidationError: If the contact has no name.
@@ -49,6 +51,9 @@ class AddressBook:
                     raise DuplicateEntryError(
                         f"A contact with the same name and phone/email already exists: {contact.name}"
                     )
+
+        if not preserve_modified_time:
+            contact.update_modified_time()
 
         self._contacts.append(contact)
         self._autosave()

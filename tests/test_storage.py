@@ -11,8 +11,10 @@ This module contains unit tests for the JSONStorage class, covering:
 
 import tempfile
 import pytest
+from unittest.mock import MagicMock
 import json
 from pathlib import Path
+from datetime import timedelta
 from organizer.models.contact import Contact
 from organizer.models.note import Note
 from organizer.services.addressbook import AddressBook
@@ -241,3 +243,75 @@ def test_sort_notes_invalid_key_should_raise():
     nb.add(Note(title="One"))
     with pytest.raises(ValueError):
         nb.sorted(by="unknown_key")
+
+
+def test_add_triggers_save_callback():
+    mock_save = MagicMock()
+    ab = AddressBook(save_callback=mock_save)
+    ab.add(Contact(name="Test"))
+
+    mock_save.assert_called_once()
+
+
+def test_edit_triggers_save_callback():
+    mock_save = MagicMock()
+    ab = AddressBook(save_callback=mock_save)
+    ab.add(Contact(name="Test", phone="+123"))
+    mock_save.reset_mock()
+
+    ab.edit("Test", {"phone": "+456"})
+    mock_save.assert_called_once()
+
+
+def test_delete_triggers_save_callback():
+    mock_save = MagicMock()
+    ab = AddressBook(save_callback=mock_save)
+    ab.add(Contact(name="Test"))
+    mock_save.reset_mock()
+
+    ab.delete("Test")
+    mock_save.assert_called_once()
+
+
+def test_contact_last_modified_preserved(storage):
+    ab = AddressBook()
+    contact = Contact(name="Preserved")
+    original_time = contact.last_modified
+    ab.add(contact)
+
+    storage.save_addressbook(ab)
+    reloaded_ab = storage.load_addressbook()
+    loaded_contact = reloaded_ab.search("Preserved")[0]
+
+    delta = abs(loaded_contact.last_modified - original_time)
+    assert delta < timedelta(milliseconds=1)
+
+
+def test_note_last_modified_preserved(storage):
+    nb = Notebook()
+    note = Note(title="Persistent", text="Track me")
+    original_time = note.last_modified
+    nb.add(note)
+
+    storage.save_notebook(nb)
+    reloaded_nb = storage.load_notebook()
+    loaded_note = reloaded_nb.search("Persistent")[0]
+
+    assert loaded_note.last_modified == original_time
+
+
+def test_json_file_updated_after_edit(storage):
+    ab = AddressBook()
+    contact = Contact(name="Track", phone="+111")
+    ab.add(contact)
+
+    storage.save_addressbook(ab)
+    original_json = storage.contacts_path.read_text()
+
+    # Edit the contact and save again
+    contact.phone = "+999"
+    ab.edit("Track", {"phone": "+999"})
+    storage.save_addressbook(ab)
+
+    updated_json = storage.contacts_path.read_text()
+    assert original_json != updated_json
